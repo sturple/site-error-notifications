@@ -1,0 +1,25 @@
+{
+    "name" : "sturple/site-error-notification",
+    "version" : "0.0.1",
+    "description" : "Error notifications",
+    "type" : "wordpress-plugin",
+    "keywords" : ["wordpress", "FGMS","theme"],
+    "homepage" : "https://github.com/sturple/site-error-notifications",
+    "license" : "GPL-3.0",   
+    "minimum-stability" : "dev",
+    "authors" : [
+        {
+            "name" : "Shawn Turple",
+            "email" : "shawn@turple.ca",
+            "homepage" : "http://turple.ca",
+            "role" : "Developer"            
+        }
+
+    ],   
+    
+    
+    "require": {
+        "php" : ">=5.4",        
+        "composer/installers": "~1.0"
+    }
+}
