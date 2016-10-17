@@ -1,0 +1,12 @@
+<ol>
+	{% for frame in backtrace %}
+	<li>
+		{% if frame.type is defined %}
+		{{frame.class}}{{frame.type}}{{frame.function}}
+		{% else %}
+		{{frame.function}}
+		{% endif %}
+		at {{frame.file}}:{{frame.line}}
+	</li>
+	{% endfor %}
+</ol>

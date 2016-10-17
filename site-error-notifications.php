@@ -24,14 +24,22 @@ call_user_func(function () {
 });
 call_user_func(function () {
     $msg = new \Swift_Message();
+    $twig = new \Twig_Environment(
+        new \Twig_Loader_Filesystem(__DIR__ . '/templates'),
+        [
+            'strict_variables' => true
+        ]
+    );
+    $swift = \Swift_Mailer::newInstance(
+        \Swift_MailTransport::newInstance()
+    );
     //  TODO: Configure message here
     $handler = new \Fgms\SiteErrorNotifications\CompositeErrorHandler();
     $handler->add(
         new \Fgms\SiteErrorNotifications\EmailErrorHandler(
             $msg,
-            \Swift_Mailer::newInstance(
-                \Swift_MailTransport::newInstance()
-            )
+            $swift,
+            $twig
         )
     )->add(
         new \Fgms\SiteErrorNotifications\DieErrorHandler()
