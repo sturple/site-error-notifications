@@ -27,12 +27,9 @@ class EmailErrorHandler implements ErrorHandlerInterface
 
     private function getSubject($str)
     {
-        if (is_null($this->name)) return $str;
-        return sprintf(
-            '%s: %s',
-            $this->name,
-            $str
-        );
+        $retr = sprintf('Fg Error %s',$str);
+        if (is_null($this->name)) return $retr;
+        return sprintf('%s | %s',$retr,$this->name);
     }
 
     private function getMessage()
@@ -44,13 +41,7 @@ class EmailErrorHandler implements ErrorHandlerInterface
 
     public function error($errno, $errstr, $errfile, $errline, array $errcontext)
     {
-        $subject = sprintf(
-            '%s at %s:%d',
-            $errstr,
-            $errfile,
-            $errline
-        );
-        $subject = $this->getSubject($subject);
+        $subject = $this->getSubject('PHP Error');
         $template = $this->twig->loadTemplate('erroremail.html.twig');
         $msg = $this->getMessage();
         $msg->setSubject($subject);
@@ -69,13 +60,7 @@ class EmailErrorHandler implements ErrorHandlerInterface
 
     public function uncaught($ex)
     {
-        $subject = sprintf(
-            '%s at %s:%d',
-            get_class($ex),
-            $ex->getFile(),
-            $ex->getLine()
-        );
-        $subject = $this->getSubject($subject);
+        $subject = $this->getSubject('Uncaught Exception');
         $template = $this->twig->loadTemplate('exceptionemail.html.twig');
         $msg = $this->getMessage();
         $msg->setSubject($subject);
