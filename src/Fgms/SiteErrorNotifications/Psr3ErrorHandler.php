@@ -17,7 +17,7 @@ class Psr3ErrorHandler implements ErrorHandlerInterface
      *  A PSR-3 logger which shall be used to log
      *  any errors which are reported.
      */
-    public function __construct (\Psr\Log\LoggerInterface $log)
+    public function __construct(\Psr\Log\LoggerInterface $log)
     {
         $this->log = $log;
     }
