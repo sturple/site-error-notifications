@@ -23,27 +23,17 @@ call_user_func(function () {
     require_once $where;
 });
 call_user_func(function () {
-    $msg = new \Swift_Message();
-    $twig = new \Twig_Environment(
-        new \Twig_Loader_Filesystem(__DIR__ . '/templates'),
-        [
-            'strict_variables' => true
-        ]
-    );
-    $swift = \Swift_Mailer::newInstance(
-        \Swift_MailTransport::newInstance()
-    );
-    //  TODO: Configure message here
-    $handler = new \Fgms\SiteErrorNotifications\CompositeErrorHandler();
-    $handler->add(
-        new \Fgms\SiteErrorNotifications\EmailErrorHandler(
-            $msg,
-            $swift,
-            $twig
+    //  Replace this with the path to your error
+    //  handler configuration file
+    $config = __DIR__ . '/config.yml';
+    $yaml = file_get_contents($config);
+    if ($yaml === false) throw new \RuntimeException(
+        sprintf(
+            'Could not open %s',
+            $config
         )
-    )->add(
-        new \Fgms\SiteErrorNotifications\DieErrorHandler()
     );
+    $handler = \Fgms\SiteErrorNotifications\YamlFactory::create($yaml);
     set_exception_handler([$handler,'uncaught']);
-    set_error_handler([$handler,'error']);
+    set_error_handler([$handler,'error'],error_reporting());
 });
