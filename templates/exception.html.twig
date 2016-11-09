@@ -1,0 +1,7 @@
+<h1>#{{num}}: {{class(ex)}}</h1>
+<p>{{ex.message}} ({{ex.code}}) at {{ex.file}}:{{ex.line}}</p>
+<h2>Backtrace</h2>
+{% include 'backtrace.html.twig' with {'backtrace': ex.trace} %}
+{% if ex.previous %}
+{% include 'exception.html.twig' with {'ex': ex.previous, 'num': num + 1} %}
+{% endif %}
