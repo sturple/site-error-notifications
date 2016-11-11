@@ -75,7 +75,8 @@ class EmailErrorHandler implements ErrorHandlerInterface
             'errfile' => $errfile,
             'errline' => $errline,
             'errcontext' => $errcontext,
-            'backtrace' => Utility::getBacktrace()
+            'backtrace' => Utility::getBacktrace(),
+            'errlevel' => Utility::getErrorLevelName($errno)
         ];
         $msg->setBody($template->render($ctx));
         $this->swift->send($msg);
