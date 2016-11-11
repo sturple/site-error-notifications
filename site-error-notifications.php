@@ -25,7 +25,7 @@ call_user_func(function () {
 call_user_func(function () {
     //  Replace this with the path to your error
     //  handler configuration file
-    $config = __DIR__ . '/config.yml';
+    $config = __DIR__ . '/../config.yml';
     $yaml = file_get_contents($config);
     if ($yaml === false) throw new \RuntimeException(
         sprintf(
