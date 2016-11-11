@@ -146,7 +146,7 @@ class YamlFactory
         $monolog = self::getArrayOrNull($arr,'','monolog');
         if (!is_null($monolog)) $retr->add(self::createMonolog($monolog,'/monolog'));
         $retr->add(new DieErrorHandler());
-        return $retr;
+        return new AtOperatorErrorHandler($retr);
     }
 
     /**
