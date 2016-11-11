@@ -13,20 +13,13 @@ namespace Fgms\SiteErrorNotifications;
 class CompositeErrorHandler implements ErrorHandlerInterface
 {
     private $children;
-    private $retr;
 
     /**
      * Creates a new CompositeErrorHandler.
-     *
-     * @param bool $retr
-     *  The value which shall be returned by the error
-     *  handler.  Defaults to \em false which allows the
-     *  normal error handler to continue.
      */
-    public function __construct($retr = false)
+    public function __construct()
     {
         $this->children = [];
-        $this->retr = false;
     }
 
     /**
@@ -45,7 +38,6 @@ class CompositeErrorHandler implements ErrorHandlerInterface
     public function error($errno, $errstr, $errfile, $errline, array $errcontext)
     {
         foreach ($this->children as $child) $child->error($errno,$errstr,$errfile,$errline,$errcontext);
-        return $this->retr;
     }
 
     public function uncaught($ex)

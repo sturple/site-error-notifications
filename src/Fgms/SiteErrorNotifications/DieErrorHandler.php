@@ -7,13 +7,13 @@ namespace Fgms\SiteErrorNotifications;
  */
 class DieErrorHandler implements ErrorHandlerInterface
 {
-	public function error($errno, $errstr, $errfile, $errline, array $errcontext)
-	{
-		die();
-	}
+    public function error($errno, $errstr, $errfile, $errline, array $errcontext)
+    {
+        die();
+    }
 
-	public function uncaught($ex)
-	{
-		die();
-	}
+    public function uncaught($ex)
+    {
+        die();
+    }
 }

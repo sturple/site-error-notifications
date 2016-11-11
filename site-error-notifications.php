@@ -25,7 +25,7 @@ call_user_func(function () {
 call_user_func(function () {
     //  Replace this with the path to your error
     //  handler configuration file
-    $config = __DIR__ . '/config.yml';
+    $config = __DIR__ . '/../config.yml';
     $yaml = file_get_contents($config);
     if ($yaml === false) throw new \RuntimeException(
         sprintf(
@@ -35,5 +35,8 @@ call_user_func(function () {
     );
     $handler = \Fgms\SiteErrorNotifications\YamlFactory::create($yaml);
     set_exception_handler([$handler,'uncaught']);
-    set_error_handler([$handler,'error'],error_reporting());
+    set_error_handler(function () use ($handler) {
+        call_user_func_array([$handler,'error'],func_get_args());
+        return true;
+    },E_ALL|E_STRICT);
 });

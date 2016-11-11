@@ -145,8 +145,16 @@ class YamlFactory
         if (!is_null($email)) $retr->add(self::createEmail($email,'/email'));
         $monolog = self::getArrayOrNull($arr,'','monolog');
         if (!is_null($monolog)) $retr->add(self::createMonolog($monolog,'/monolog'));
-        $retr->add(new DieErrorHandler());
-        return $retr;
+        $die = new CompositeErrorHandler();
+        $retr->add(
+            new IgnoreErrorHandler(
+                E_WARNING|E_NOTICE|E_CORE_WARNING|E_COMPILE_WARNING|E_USER_WARNING|E_USER_NOTICE|E_STRICT|E_DEPRECATED|E_USER_DEPRECATED,
+                $die
+            )
+        );
+        $die->add(new InternalServerErrorErrorHandler())
+            ->add(new DieErrorHandler());
+        return new AtOperatorErrorHandler($retr);
     }
 
     /**

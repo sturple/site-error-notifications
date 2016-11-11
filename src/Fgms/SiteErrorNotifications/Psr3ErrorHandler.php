@@ -51,16 +51,15 @@ class Psr3ErrorHandler implements ErrorHandlerInterface
     public function error($errno, $errstr, $errfile, $errline, array $errcontext)
     {
         $msg = sprintf(
-            'PHP Error %s (%d) at %s:%d:',
+            'PHP Error %s (%s) at %s:%d:',
             $errstr,
-            $errno,
+            Utility::getErrorLevelName($errno),
             $errfile,
             $errline
         );
         $msg .= $this->newline;
         $msg .= $this->formatBacktrace(Utility::getBacktrace());
         $this->log->error($msg);
-        return false;
     }
 
     public function uncaught($ex)
