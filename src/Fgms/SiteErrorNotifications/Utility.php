@@ -10,7 +10,7 @@ class Utility
         $bt = array_reverse($bt);
         $retr = [];
         foreach ($bt as $frame) {
-            if (isset($frame['class']) && is_subclass_of('\\' . $frame['class'],'\\Fgms\\SiteErrorNotifications\\ErrorHandlerInterface')) break;
+            if (!(isset($frame['file']) && isset($frame['line']))) break;
             $retr[] = $frame;
         }
         return array_reverse($retr);
