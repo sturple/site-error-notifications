@@ -16,8 +16,6 @@ interface ErrorHandlerInterface
      * @param string $errfile
      * @param int $errline
      * @param array $errcontext
-     *
-     * @return bool
      */
     public function error($errno, $errstr, $errfile, $errline, array $errcontext);
 

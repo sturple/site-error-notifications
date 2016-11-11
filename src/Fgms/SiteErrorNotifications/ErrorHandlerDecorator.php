@@ -25,7 +25,7 @@ abstract class ErrorHandlerDecorator implements ErrorHandlerInterface
 
     public function error($errno, $errstr, $errfile, $errline, array $errcontext)
     {
-        return $this->inner->error($errno,$errstr,$errfile,$errline,$errcontext);
+        $this->inner->error($errno,$errstr,$errfile,$errline,$errcontext);
     }
 
     public function uncaught($ex)

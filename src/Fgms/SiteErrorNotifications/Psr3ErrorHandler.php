@@ -60,7 +60,6 @@ class Psr3ErrorHandler implements ErrorHandlerInterface
         $msg .= $this->newline;
         $msg .= $this->formatBacktrace(Utility::getBacktrace());
         $this->log->error($msg);
-        return false;
     }
 
     public function uncaught($ex)

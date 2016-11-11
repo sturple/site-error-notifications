@@ -79,7 +79,6 @@ class EmailErrorHandler implements ErrorHandlerInterface
         ];
         $msg->setBody($template->render($ctx));
         $this->swift->send($msg);
-        return false;
     }
 
     public function uncaught($ex)

@@ -13,7 +13,7 @@ abstract class ConditionalErrorHandler extends ErrorHandlerDecorator
 {
     public function error($errno, $errstr, $errfile, $errline, array $errcontext)
     {
-        return $this->evaluateErrorCondition($errno,$errstr,$errfile,$errline,$errcontext) && parent::error($errno,$errstr,$errfile,$errline,$errcontext);
+        if ($this->evaluateErrorCondition($errno,$errstr,$errfile,$errline,$errcontext)) parent::error($errno,$errstr,$errfile,$errline,$errcontext);
     }
 
     /**
