@@ -41,7 +41,7 @@ abstract class ConditionalErrorHandler extends ErrorHandlerDecorator
 
     public function uncaught($ex)
     {
-        return $this->evaluateUncaughtCondition($ex) && parent::uncaught($ex);
+        if ($this->evaluateUncaughtCondition($ex)) parent::uncaught($ex);
     }
 
     /**
