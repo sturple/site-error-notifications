@@ -1,0 +1,4 @@
+<h1>PHP Error</h1>
+<p>{{errstr}} ({{errlevel}}) at {{errfile}}:{{errline}}</p>
+<h2>Backtrace</h2>
+{% include 'backtrace.html.twig' with {'backtrace': backtrace} %}

@@ -32,4 +32,31 @@ class Utility
             )
         );
     }
+
+    public static function renderError($errno, $errstr, $errfile, $errline, array $errcontext, $template_name, \Twig_Environment $twig, array $ctx = [])
+    {
+        $template = $twig->loadTemplate($template_name);
+        return $template->render(array_merge([
+            'errno' => $errno,
+            'errstr' => $errstr,
+            'errfile' => $errfile,
+            'errline' => $errline,
+            'errcontext' => $errcontext,
+            'backtrace' => self::getBacktrace(),
+            'errlevel' => self::getErrorLevelName($errno)
+        ],$ctx));
+    }
+
+    public static function renderException($ex, $template_name, \Twig_Environment $twig, array $ctx = [])
+    {
+        //  What if this happens multiple times?
+        $twig->addFunction(
+            new \Twig_SimpleFunction(
+                'class',
+                function ($obj) {   return get_class($obj); }
+            )
+        );
+        $template = $twig->loadTemplate($template_name);
+        return $template->render(array_merge(['ex' => $ex],$ctx));
+    }
 }
