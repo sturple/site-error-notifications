@@ -78,6 +78,21 @@ class YamlFactory
         return $retr;
     }
 
+    private static function getBooleanOrNull(array $arr, $path, $key)
+    {
+        if (!isset($arr[$key])) return null;
+        $retr = $arr[$key];
+        if (!is_bool($retr)) self::raiseTypeMismatch($path,$key,'boolean');
+        return $retr;
+    }
+
+    private static function getBoolean(array $arr, $path, $key)
+    {
+        $retr = self::getBooleanOrNull($arr,$path,$key);
+        if (is_null($retr)) self::raiseMissing($path,$key);
+        return $retr;
+    }
+
     private static function getEmailsOrNull(array $arr, $path, $key)
     {
         $val = self::getOrNull($arr,$path,$key);
@@ -106,22 +121,28 @@ class YamlFactory
         return $retr;
     }
 
+    private static function createTwig(array $arr, $path)
+    {
+        return new \Twig_Environment(
+            new \Twig_Loader_Filesystem(
+                self::getString($arr,$path,'templates'),
+                ['strict_variables' => true]
+            )
+        );
+    }
+
     private static function createEmail(array $arr, $path)
     {
         $msg = new \Swift_Message();
         $msg->setFrom(self::getString($arr,$path,'from'))
             ->setTo(self::getEmails($arr,$path,'to'));
-        $twig = new \Twig_Environment(
-            new \Twig_Loader_Filesystem(self::getString($arr,$path,'templates')),
-            ['strict_variables' => true]
-        );
         $swift = \Swift_Mailer::newInstance(
             \Swift_MailTransport::newInstance()
         );
         return new EmailErrorHandler(
             $msg,
             $swift,
-            $twig,
+            self::createTwig($arr,$path),
             self::getStringOrNull($arr,$path,'name')
         );
     }
@@ -138,6 +159,17 @@ class YamlFactory
         return new Psr3ErrorHandler($log);
     }
 
+    private static function createHtml(array $arr, $path)
+    {
+        $twig = self::createTwig($arr,$path);
+        $debug = self::getBooleanOrNull($arr,$path,'debug');
+        //  Err on the side of caution and assume we're not in
+        //  debug mode
+        if (is_null($debug)) $debug = false;
+        if ($debug) return new DebugHtmlErrorHandler($twig);
+        return new ProductionHtmlErrorHandler($twig);
+    }
+
     private static function createFromArray(array $arr)
     {
         $retr = new CompositeErrorHandler();
@@ -152,8 +184,10 @@ class YamlFactory
                 $die
             )
         );
-        $die->add(new InternalServerErrorErrorHandler())
-            ->add(new DieErrorHandler());
+        $die->add(new InternalServerErrorErrorHandler());
+        $html = self::getArrayOrNull($arr,'','html');
+        if (!is_null($html)) $die->add(self::createHtml($html,'/html'));
+        $die->add(new DieErrorHandler());
         return new AtOperatorErrorHandler($retr);
     }
 

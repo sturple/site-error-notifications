@@ -19,4 +19,7 @@ email:
     to: # The address (a string) or addresses (an array) to which emails shall be sent
     templates: # Path to the templates directory for Twig
     name: # The name of the site (optional)
+html:
+    templates: # Path to the templates directory for Twig
+    debug: # True for debug messages, false otherwise (optional, defaults to false)
 ```
