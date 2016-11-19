@@ -136,6 +136,18 @@ class YamlFactory
         return $retr;
     }
 
+    private static function getIgnore(array $arr, $path, ErrorHandlerInterface $eh)
+    {
+        $ignore = self::getStringOrNull($arr,$path,'ignore');
+        if (is_null($ignore)) return $eh;
+        $ignore = trim($ignore);
+        if ($ignore === '') return $eh;
+        $mask = 0;
+        $ignore = preg_split('/\\|/u',$ignore);
+        foreach ($ignore as $i) $mask |= Utility::getErrorLevelNum(trim($i));
+        return new IgnoreErrorHandler($mask,$eh);
+    }
+
     private static function createTwig(array $arr, $path)
     {
         return new \Twig_Environment(
@@ -166,11 +178,15 @@ class YamlFactory
             if (!is_null($pass)) $transport->setPassword($pass);
         }
         $swift = \Swift_Mailer::newInstance($transport);
-        return new EmailErrorHandler(
-            $msg,
-            $swift,
-            self::createTwig($arr,$path),
-            self::getStringOrNull($arr,$path,'name')
+        return self::getIgnore(
+            $arr,
+            $path,
+            new EmailErrorHandler(
+                $msg,
+                $swift,
+                self::createTwig($arr,$path),
+                self::getStringOrNull($arr,$path,'name')
+            )
         );
     }
 
@@ -183,7 +199,11 @@ class YamlFactory
         $stream = new \Monolog\Handler\StreamHandler($file,\Monolog\Logger::ERROR);
         $stream->setFormatter(new \Monolog\Formatter\LineFormatter(null,null,true));
         $log->pushHandler($stream);
-        return new Psr3ErrorHandler($log);
+        return self::getIgnore(
+            $arr,
+            $path,
+            new Psr3ErrorHandler($log)
+        );
     }
 
     private static function createHtml(array $arr, $path)

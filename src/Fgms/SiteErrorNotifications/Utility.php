@@ -16,13 +16,18 @@ class Utility
         return array_reverse($retr);
     }
 
+    private static function isErrorLevelName($name)
+    {
+        return !!preg_match('/^E\\_/u',$name);
+    }
+
     public static function getErrorLevelName($errno)
     {
         $constants = get_defined_constants(true);
         $core = $constants['Core'];
         $levels = [];
         foreach ($core as $name => $value) {
-            if (preg_match('/^E\\_/u',$name)) $levels[$value] = $name;
+            if (self::isErrorLevelName($name)) $levels[$value] = $name;
         }
         if (isset($levels[$errno])) return $levels[$errno];
         throw new \LogicException(
@@ -31,6 +36,25 @@ class Utility
                 $errno
             )
         );
+    }
+
+    private static function raiseNotAnErrorLevel($name)
+    {
+        throw new \LogicException(
+            sprintf(
+                '"%s" is not a PHP error level',
+                $name
+            )
+        );
+    }
+
+    public static function getErrorLevelNum($name)
+    {
+        if (!self::isErrorLevelName($name)) self::raiseNotAnErrorLevel($name);
+        $constants = get_defined_constants(true);
+        $core = $constants['Core'];
+        if (!isset($core[$name])) self::raiseNotAnErrorLevel($name);
+        return $core[$name];
     }
 
     public static function renderError($errno, $errstr, $errfile, $errline, array $errcontext, $template_name, \Twig_Environment $twig, array $ctx = [])
