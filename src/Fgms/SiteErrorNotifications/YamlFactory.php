@@ -144,7 +144,22 @@ class YamlFactory
         if ($ignore === '') return $eh;
         $mask = 0;
         $ignore = preg_split('/\\|/u',$ignore);
-        foreach ($ignore as $i) $mask |= Utility::getErrorLevelNum(trim($i));
+        foreach ($ignore as $i) {
+            $i = trim($i);
+            try {
+                $num = Utility::getErrorLevelNum($i);
+            } catch (\LogicException $e) {
+                throw new InvalidYamlException(
+                    sprintf(
+                        'Could not transform "%s" to PHP error level',
+                        $i
+                    ),
+                    0,
+                    $e
+                );
+            }
+            $mask |= $num;
+        }
         return new IgnoreErrorHandler($mask,$eh);
     }
 
