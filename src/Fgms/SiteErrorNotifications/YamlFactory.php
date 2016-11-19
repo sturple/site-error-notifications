@@ -93,6 +93,21 @@ class YamlFactory
         return $retr;
     }
 
+    private static function getIntegerOrNull(array $arr, $path, $key)
+    {
+        if (!isset($arr[$key])) return null;
+        $retr = $arr[$key];
+        if (!is_int($retr)) self::raiseTypeMismatch($path,$key,'integer');
+        return $retr;
+    }
+
+    private static function getInteger(array $arr, $path, $key)
+    {
+        $retr = self::getIntegerOrNull($arr,$path,$key);
+        if (is_null($retr)) self::raiseMissing($path,$key);
+        return $retr;
+    }
+
     private static function getEmailsOrNull(array $arr, $path, $key)
     {
         $val = self::getOrNull($arr,$path,$key);
@@ -136,9 +151,21 @@ class YamlFactory
         $msg = new \Swift_Message();
         $msg->setFrom(self::getString($arr,$path,'from'))
             ->setTo(self::getEmails($arr,$path,'to'));
-        $swift = \Swift_Mailer::newInstance(
-            \Swift_MailTransport::newInstance()
-        );
+        $host = self::getStringOrNull($arr,$path,'host');
+        if (is_null($host)) {
+            $transport = \Swift_MailTransport::newInstance();
+        } else {
+            $transport = \Swift_SmtpTransport::newInstance($host);
+            $enc = self::getStringOrNull($arr,$path,'encryption');
+            if (!is_null($enc)) $transport->setEncryption($enc);
+            $port = self::getIntegerOrNull($arr,$path,'port');
+            if (!is_null($port)) $transport->setPort($port);
+            $user = self::getStringOrNull($arr,$path,'username');
+            if (!is_null($user)) $transport->setUsername($user);
+            $pass = self::getStringOrNull($arr,$path,'password');
+            if (!is_null($pass)) $transport->setPassword($pass);
+        }
+        $swift = \Swift_Mailer::newInstance($transport);
         return new EmailErrorHandler(
             $msg,
             $swift,

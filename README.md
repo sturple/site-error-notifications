@@ -19,6 +19,11 @@ email:
     to: # The address (a string) or addresses (an array) to which emails shall be sent
     templates: # Path to the templates directory for Twig
     name: # The name of the site (optional)
+    host: # Optional, if present Swift will be configured to send directly using this host rather than by using PHP's mail function
+    port: # Optional, only regarded if "host" is present, the port to use for SMTP
+    encryption: # Optional, only regarded if "host" is present, the encryption type to use for SMTP
+    username: # Optional, only regarded if "host" is present, the username to use for SMTP
+    password: # Optional, only regarded if "host" is present, the password to use for SMTP
 html:
     templates: # Path to the templates directory for Twig
     debug: # True for debug messages, false otherwise (optional, defaults to false)
