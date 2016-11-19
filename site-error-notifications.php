@@ -9,6 +9,7 @@
  * License: GPU-3.0
  */
 
+require_once(ABSPATH . 'wp-admin/includes/plugin.php');
 call_user_func(function () {
     $rel='vendor/autoload.php';
     $search=[__DIR__.'/',ABSPATH];
@@ -27,13 +28,27 @@ call_user_func(function () {
     //  handler configuration file
     $config = __DIR__ . '/../config.yml';
     $yaml = file_get_contents($config);
-    if ($yaml === false) throw new \RuntimeException(
-        sprintf(
-            'Could not open %s',
-            $config
-        )
-    );
-    $handler = \Fgms\SiteErrorNotifications\YamlFactory::create($yaml);
+    if ($yaml === false) {
+        deactivate_plugins(plugin_basename(__FILE__));
+        wp_die(
+            sprintf(
+                'Could not open configuration file %s',
+                $config
+            )
+        );
+    }
+    try {
+        $handler = \Fgms\SiteErrorNotifications\YamlFactory::create($yaml);
+    } catch (\Fgms\SiteErrorNotifications\InvalidYamlException $e) {
+        deactivate_plugins(plugin_basename(__FILE__));
+        wp_die(
+            sprintf(
+                'Error parsing configuration file %s: %s',
+                $config,
+                $e->getMessage()
+            )
+        );
+    }
     set_exception_handler([$handler,'uncaught']);
     set_error_handler(function () use ($handler) {
         call_user_func_array([$handler,'error'],func_get_args());
