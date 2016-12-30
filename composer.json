@@ -1,10 +1,10 @@
 {
-    "name" : "sturple/site-error-notification",
+    "name" : "sturple/wp-plugin-notifications",
     "version" : "0.0.1",
     "description" : "Error notifications",
     "type" : "wordpress-plugin",
     "keywords" : ["wordpress", "FGMS","theme"],
-    "homepage" : "https://github.com/sturple/site-error-notifications",
+    "homepage" : "https://github.com/sturple/wp-plugin-notifications",
     "license" : "GPL-3.0",   
     "minimum-stability" : "dev",
     "authors" : [
