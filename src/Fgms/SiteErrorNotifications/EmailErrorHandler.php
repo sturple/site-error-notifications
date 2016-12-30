@@ -39,14 +39,6 @@ class EmailErrorHandler implements ErrorHandlerInterface
         $this->swift = $swift;
         $this->twig = $twig;
         $this->name = $name;
-        //  TODO: Try and localize this so that
-        //  we don't pollute the entire Twig environment
-        $this->twig->addFunction(
-            new \Twig_SimpleFunction(
-                'class',
-                function ($obj) {   return get_class($obj); }
-            )
-        );
     }
 
     private function getSubject($str)
@@ -66,32 +58,18 @@ class EmailErrorHandler implements ErrorHandlerInterface
     public function error($errno, $errstr, $errfile, $errline, array $errcontext)
     {
         $subject = $this->getSubject('PHP Error');
-        $template = $this->twig->loadTemplate('erroremail.html.twig');
         $msg = $this->getMessage();
         $msg->setSubject($subject);
-        $ctx = [
-            'errno' => $errno,
-            'errstr' => $errstr,
-            'errfile' => $errfile,
-            'errline' => $errline,
-            'errcontext' => $errcontext,
-            'backtrace' => Utility::getBacktrace(),
-            'errlevel' => Utility::getErrorLevelName($errno)
-        ];
-        $msg->setBody($template->render($ctx));
+        $msg->setBody(Utility::renderError($errno,$errstr,$errfile,$errline,$errcontext,'erroremail.html.twig',$this->twig));
         $this->swift->send($msg);
     }
 
     public function uncaught($ex)
     {
         $subject = $this->getSubject('Uncaught Exception');
-        $template = $this->twig->loadTemplate('exceptionemail.html.twig');
         $msg = $this->getMessage();
         $msg->setSubject($subject);
-        $ctx = [
-            'ex' => $ex
-        ];
-        $msg->setBody($template->render($ctx));
+        $msg->setBody(Utility::renderException($ex,'exceptionemail.html.twig',$this->twig));
         $this->swift->send($msg);
     }
 }

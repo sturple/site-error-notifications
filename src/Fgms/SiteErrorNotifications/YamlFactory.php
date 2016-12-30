@@ -78,6 +78,36 @@ class YamlFactory
         return $retr;
     }
 
+    private static function getBooleanOrNull(array $arr, $path, $key)
+    {
+        if (!isset($arr[$key])) return null;
+        $retr = $arr[$key];
+        if (!is_bool($retr)) self::raiseTypeMismatch($path,$key,'boolean');
+        return $retr;
+    }
+
+    private static function getBoolean(array $arr, $path, $key)
+    {
+        $retr = self::getBooleanOrNull($arr,$path,$key);
+        if (is_null($retr)) self::raiseMissing($path,$key);
+        return $retr;
+    }
+
+    private static function getIntegerOrNull(array $arr, $path, $key)
+    {
+        if (!isset($arr[$key])) return null;
+        $retr = $arr[$key];
+        if (!is_int($retr)) self::raiseTypeMismatch($path,$key,'integer');
+        return $retr;
+    }
+
+    private static function getInteger(array $arr, $path, $key)
+    {
+        $retr = self::getIntegerOrNull($arr,$path,$key);
+        if (is_null($retr)) self::raiseMissing($path,$key);
+        return $retr;
+    }
+
     private static function getEmailsOrNull(array $arr, $path, $key)
     {
         $val = self::getOrNull($arr,$path,$key);
@@ -106,23 +136,72 @@ class YamlFactory
         return $retr;
     }
 
+    private static function getIgnore(array $arr, $path, ErrorHandlerInterface $eh)
+    {
+        $ignore = self::getStringOrNull($arr,$path,'ignore');
+        if (is_null($ignore)) return $eh;
+        $ignore = trim($ignore);
+        if ($ignore === '') return $eh;
+        $mask = 0;
+        $ignore = preg_split('/\\|/u',$ignore);
+        foreach ($ignore as $i) {
+            $i = trim($i);
+            try {
+                $num = Utility::getErrorLevelNum($i);
+            } catch (\LogicException $e) {
+                throw new InvalidYamlException(
+                    sprintf(
+                        'Could not transform "%s" to PHP error level',
+                        $i
+                    ),
+                    0,
+                    $e
+                );
+            }
+            $mask |= $num;
+        }
+        return new IgnoreErrorHandler($mask,$eh);
+    }
+
+    private static function createTwig(array $arr, $path)
+    {
+        return new \Twig_Environment(
+            new \Twig_Loader_Filesystem(
+                self::getString($arr,$path,'templates'),
+                ['strict_variables' => true]
+            )
+        );
+    }
+
     private static function createEmail(array $arr, $path)
     {
         $msg = new \Swift_Message();
         $msg->setFrom(self::getString($arr,$path,'from'))
             ->setTo(self::getEmails($arr,$path,'to'));
-        $twig = new \Twig_Environment(
-            new \Twig_Loader_Filesystem(self::getString($arr,$path,'templates')),
-            ['strict_variables' => true]
-        );
-        $swift = \Swift_Mailer::newInstance(
-            \Swift_MailTransport::newInstance()
-        );
-        return new EmailErrorHandler(
-            $msg,
-            $swift,
-            $twig,
-            self::getStringOrNull($arr,$path,'name')
+        $host = self::getStringOrNull($arr,$path,'host');
+        if (is_null($host)) {
+            $transport = \Swift_MailTransport::newInstance();
+        } else {
+            $transport = \Swift_SmtpTransport::newInstance($host);
+            $enc = self::getStringOrNull($arr,$path,'encryption');
+            if (!is_null($enc)) $transport->setEncryption($enc);
+            $port = self::getIntegerOrNull($arr,$path,'port');
+            if (!is_null($port)) $transport->setPort($port);
+            $user = self::getStringOrNull($arr,$path,'username');
+            if (!is_null($user)) $transport->setUsername($user);
+            $pass = self::getStringOrNull($arr,$path,'password');
+            if (!is_null($pass)) $transport->setPassword($pass);
+        }
+        $swift = \Swift_Mailer::newInstance($transport);
+        return self::getIgnore(
+            $arr,
+            $path,
+            new EmailErrorHandler(
+                $msg,
+                $swift,
+                self::createTwig($arr,$path),
+                self::getStringOrNull($arr,$path,'name')
+            )
         );
     }
 
@@ -135,7 +214,22 @@ class YamlFactory
         $stream = new \Monolog\Handler\StreamHandler($file,\Monolog\Logger::ERROR);
         $stream->setFormatter(new \Monolog\Formatter\LineFormatter(null,null,true));
         $log->pushHandler($stream);
-        return new Psr3ErrorHandler($log);
+        return self::getIgnore(
+            $arr,
+            $path,
+            new Psr3ErrorHandler($log)
+        );
+    }
+
+    private static function createHtml(array $arr, $path)
+    {
+        $twig = self::createTwig($arr,$path);
+        $debug = self::getBooleanOrNull($arr,$path,'debug');
+        //  Err on the side of caution and assume we're not in
+        //  debug mode
+        if (is_null($debug)) $debug = false;
+        if ($debug) return new DebugHtmlErrorHandler($twig);
+        return new ProductionHtmlErrorHandler($twig);
     }
 
     private static function createFromArray(array $arr)
@@ -152,8 +246,10 @@ class YamlFactory
                 $die
             )
         );
-        $die->add(new InternalServerErrorErrorHandler())
-            ->add(new DieErrorHandler());
+        $die->add(new InternalServerErrorErrorHandler());
+        $html = self::getArrayOrNull($arr,'','html');
+        if (!is_null($html)) $die->add(self::createHtml($html,'/html'));
+        $die->add(new DieErrorHandler());
         return new AtOperatorErrorHandler($retr);
     }
 
